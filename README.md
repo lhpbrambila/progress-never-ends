@@ -1,9 +1,9 @@
-# Crônicas de Cinzas
+# A Última Vigília
 
 RPG **100% idle** em português do Brasil, de tom sombrio e épico. O personagem marcha, luta, recua, descansa, forja e evolui sozinho; você acompanha a crônica. Existe em duas versões que compartilham o mesmo núcleo:
 
-- **Terminal (`CronicasDeCinzas-CMD.exe`)**: roda no `cmd.exe` / Windows Terminal.
-- **Janela (`CronicasDeCinzas.exe`)**: interface desktop (tkinter), com instalador.
+- **Terminal (`UltimaVigilia-CMD.exe`)**: roda no `cmd.exe` / Windows Terminal.
+- **Janela (`UltimaVigilia.exe`)**: interface desktop (tkinter), com instalador.
 
 ## Stack e por quê
 
@@ -17,7 +17,7 @@ RPG **100% idle** em português do Brasil, de tom sombrio e épico. O personagem
 ## Arquitetura
 
 ```
-cronicas_de_cinzas/
+ultima_vigilia/
 ├── core/                    # engine: sem I/O de tela, sem dependência de UI
 │   ├── dados.py             # atributos, origens, classes, maestrias, regiões e TODOS os textos (PT-BR)
 │   ├── itens.py             # geração, raridade, afixos, refinamento
@@ -27,8 +27,9 @@ cronicas_de_cinzas/
 │   └── util.py              # formatação (tempo, números, romanos)
 ├── ui/
 │   ├── cmd_ui.py            # terminal: ANSI, redesenho único por quadro, teclas sem bloquear
+│   ├── saida_segura.py      # salva sozinho ao fechar a janela do console (X), logoff, SIGHUP/SIGTERM
 │   └── gui_ui.py            # janela tkinter
-├── tests/test_core.py       # 20 testes (simulação, save, offline, criação)
+├── tests/                   # 24 testes (simulação, save, offline, criação, saída segura)
 ├── main.py                  # entrada única: --cmd / --gui / --ascii / --dir / --versao
 ├── main_gui.py              # entrada do .exe com janela
 ├── main_cmd.py              # entrada do .exe de terminal
@@ -52,17 +53,17 @@ cronicas_de_cinzas/
 
 ### Persistência e progresso offline
 
-- Save em `%APPDATA%\CronicasDeCinzas\save.json` (fora da pasta de instalação, então atualizar ou desinstalar **preserva o progresso**). Gravação atômica (`.tmp` + `os.replace`) com cópia `save.bak`; se o save principal estiver corrompido, o backup é usado.
-- Autosave a cada 30 s e ao sair.
+- Save em `%APPDATA%\UltimaVigilia\save.json` (fora da pasta de instalação, então atualizar ou desinstalar **preserva o progresso**). Gravação atômica (`.tmp` + `os.replace`) com cópia `save.bak`; se o save principal estiver corrompido, o backup é usado.
+- Autosave a cada 30 s e ao sair. **Fechar a janela do terminal no X (ou o `.bat`/`.exe` de terminal) também salva**: o Windows avisa o processo (`CTRL_CLOSE_EVENT`) e o jogo grava o save final em milissegundos. O mesmo vale para logoff e desligamento. Só um encerramento forçado (Gerenciador de Tarefas, queda de energia) não pode ser interceptado; nesse caso vale o último autosave, com no máximo 30 s de perda, que o progresso offline repõe ao reabrir.
 - Ao abrir, o tempo decorrido desde o último save é simulado (até 24 h) e mostrado em um **relatório** (níveis, abates, léguas, recuos, itens, refinos, marcos). Durante a ausência a crônica só registra marcos e alertas, para não ser inundada.
-- Exportação: `%APPDATA%\CronicasDeCinzas\exportacoes\cronicas_AAAAMMDD_HHMMSS.json` (também importável). **Reiniciar** pede confirmação e guarda uma cópia `save_anterior_*.json`.
+- Exportação: `%APPDATA%\UltimaVigilia\exportacoes\vigilia_AAAAMMDD_HHMMSS.json` (também importável). **Reiniciar** pede confirmação e guarda uma cópia `save_anterior_*.json`.
 
 ## Controles
 
-**Terminal** (tecla única, sem Enter): `P` pausa/retoma · `V` velocidade (x1 a x100) · `1` painel · `2` atributos · `3` equipamentos · `4` maestrias · `5` jornada · `6` crônica · `D` detalhes de combate · `X` exportar save · `Z` reiniciar (confirmação) · `Q` salvar e sair.
+**Terminal** (tecla única, sem Enter): `P` pausa/retoma · `1` painel · `2` atributos · `3` equipamentos · `4` maestrias · `5` jornada · `6` crônica · `D` detalhes de combate · `X` exportar save · `Z` reiniciar (confirmação) · `Q` salvar e sair.
 Opções: `--ascii` (molduras sem Unicode), `--dir PASTA` (outra pasta de saves).
 
-**Janela**: botões Pausar, Velocidade, Exportar, Importar, Reiniciar e Sair; barra de espaço também pausa.
+**Janela**: botões Pausar, Exportar, Importar, Reiniciar e Sair; barra de espaço também pausa.
 
 ## Rodar do código-fonte
 
@@ -91,19 +92,19 @@ pip install pyinstaller
 
 python -m unittest discover -s tests
 
-pyinstaller --noconfirm --clean --onefile --windowed --name CronicasDeCinzas ^
+pyinstaller --noconfirm --clean --onefile --windowed --name UltimaVigilia ^
   --paths . --distpath dist --workpath build\gui --specpath build main_gui.py
 
-pyinstaller --noconfirm --clean --onefile --console --name CronicasDeCinzas-CMD ^
+pyinstaller --noconfirm --clean --onefile --console --name UltimaVigilia-CMD ^
   --paths . --distpath dist --workpath build\cmd --specpath build main_cmd.py
 
 "%ProgramFiles(x86)%\Inno Setup 6\ISCC.exe" installer.iss
 ```
 
-Saídas: `dist\CronicasDeCinzas.exe`, `dist\CronicasDeCinzas-CMD.exe` e `instalador\CronicasDeCinzas-Instalador-1.0.0.exe`.
+Saídas: `dist\UltimaVigilia.exe`, `dist\UltimaVigilia-CMD.exe` e `instalador\UltimaVigilia-Instalador-1.0.0.exe`.
 
 O instalador:
-- instala em `%LocalAppData%\Programs\CronicasDeCinzas` (ou em *Arquivos de Programas*, se o usuário escolher instalar para todos);
+- instala em `%LocalAppData%\Programs\UltimaVigilia` (ou em *Arquivos de Programas*, se o usuário escolher instalar para todos);
 - cria atalhos no Menu Iniciar (janela e terminal) e, opcionalmente, na Área de Trabalho;
 - não toca nos saves ao atualizar ou desinstalar.
 

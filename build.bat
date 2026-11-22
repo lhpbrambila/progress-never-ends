@@ -1,8 +1,8 @@
 @echo off
 rem ============================================================================
-rem  Cronicas de Cinzas - build completo no Windows
-rem  Gera: dist\CronicasDeCinzas.exe (janela), dist\CronicasDeCinzas-CMD.exe (terminal)
-rem        e, se o Inno Setup 6 estiver instalado, instalador\CronicasDeCinzas-Instalador-1.0.0.exe
+rem  A Ultima Vigilia - build completo no Windows
+rem  Gera: dist\UltimaVigilia.exe (janela), dist\UltimaVigilia-CMD.exe (terminal)
+rem        e, se o Inno Setup 6 estiver instalado, instalador\UltimaVigilia-Instalador-1.0.0.exe
 rem  Uso:  build.bat           (testa, compila e gera o instalador)
 rem        build.bat semtestes (pula os testes)
 rem ============================================================================
@@ -36,12 +36,12 @@ python -m unittest discover -s tests || (echo [ERRO] Testes falharam. & exit /b 
 set "ICONE="
 if exist assets\icone.ico set "ICONE=--icon assets\icone.ico"
 
-echo [2/4] Gerando CronicasDeCinzas.exe ^(interface grafica, sem console^) ...
-pyinstaller --noconfirm --clean --onefile --windowed --name CronicasDeCinzas ^
+echo [2/4] Gerando UltimaVigilia.exe ^(interface grafica, sem console^) ...
+pyinstaller --noconfirm --clean --onefile --windowed --name UltimaVigilia ^
   --paths . --distpath dist --workpath build\gui --specpath build %ICONE% main_gui.py || exit /b 1
 
-echo [3/4] Gerando CronicasDeCinzas-CMD.exe ^(terminal^) ...
-pyinstaller --noconfirm --clean --onefile --console --name CronicasDeCinzas-CMD ^
+echo [3/4] Gerando UltimaVigilia-CMD.exe ^(terminal^) ...
+pyinstaller --noconfirm --clean --onefile --console --name UltimaVigilia-CMD ^
   --paths . --distpath dist --workpath build\cmd --specpath build %ICONE% main_cmd.py || exit /b 1
 
 echo [4/4] Gerando o instalador ...
@@ -58,7 +58,7 @@ if not defined ISCC (
 
 echo.
 echo Pronto:
-echo   dist\CronicasDeCinzas.exe
-echo   dist\CronicasDeCinzas-CMD.exe
-echo   instalador\CronicasDeCinzas-Instalador-1.0.0.exe
+echo   dist\UltimaVigilia.exe
+echo   dist\UltimaVigilia-CMD.exe
+echo   instalador\UltimaVigilia-Instalador-1.0.0.exe
 exit /b 0

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Interface gráfica (janela desktop) em tkinter, usada pelo CronicasDeCinzas.exe.
+"""Interface gráfica (janela desktop) em tkinter, usada pelo UltimaVigilia.exe.
 
 Usa exatamente o mesmo núcleo (core.motor) da versão de terminal.
 """
@@ -14,7 +14,6 @@ from core import criacao, dados as D, itens as I, persistencia as P
 from core.motor import Motor, retomar, xp_proximo_nivel, xp_proxima_maestria
 from core.util import fmt_dec, fmt_duracao, fmt_num, fmt_relogio, limitar
 
-VELOCIDADES = [1, 2, 5, 10, 30, 100]
 AUTOSAVE_S = 30.0
 
 BG = "#14110f"
@@ -215,14 +214,13 @@ class Aplicacao:
     def __init__(self):
         _ativar_dpi()
         self.root = tk.Tk()
-        self.root.title("Crônicas de Cinzas")
+        self.root.title("A Última Vigília")
         self.root.configure(bg=BG)
         self.root.geometry("980x700")
         self.root.minsize(820, 560)
         _estilizar(self.root)
         self.motor = None
         self.pausado = False
-        self.vel_i = 0
         self._ult = time.monotonic()
         self._ult_save = self._ult
         self._ult_cron = 0
@@ -324,8 +322,6 @@ class Aplicacao:
         base.pack(fill="x", padx=14, pady=(0, 12))
         self.btn_pausa = ttk.Button(base, text="Pausar", command=self.alternar_pausa)
         self.btn_pausa.pack(side="left")
-        self.btn_vel = ttk.Button(base, text="Velocidade x1", command=self.ciclar_vel)
-        self.btn_vel.pack(side="left", padx=6)
         ttk.Checkbutton(base, text="Detalhes de combate", variable=self.mostrar_detalhes,
                         command=self._recarregar_cronica).pack(side="left", padx=10)
         ttk.Button(base, text="Sair", command=self.sair).pack(side="right")
@@ -338,10 +334,6 @@ class Aplicacao:
     def alternar_pausa(self):
         self.pausado = not self.pausado
         self.btn_pausa.config(text="Retomar" if self.pausado else "Pausar")
-
-    def ciclar_vel(self):
-        self.vel_i = (self.vel_i + 1) % len(VELOCIDADES)
-        self.btn_vel.config(text="Velocidade x%d" % VELOCIDADES[self.vel_i])
 
     def exportar(self):
         P.salvar(self.motor.s)
@@ -403,7 +395,7 @@ class Aplicacao:
         dt = min(agora - self._ult, 120.0)
         self._ult = agora
         if self.motor and not self.pausado:
-            self.motor.avancar(dt * VELOCIDADES[self.vel_i])
+            self.motor.avancar(dt)
         if agora - self._ult_save >= AUTOSAVE_S:
             P.salvar(self.motor.s)
             self._ult_save = agora

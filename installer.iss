@@ -1,23 +1,23 @@
 ﻿; ============================================================================
-;  Crônicas de Cinzas - script do instalador (Inno Setup 6.3 ou superior)
+;  A Última Vigília - script do instalador (Inno Setup 6.3 ou superior)
 ;  Compile com:  ISCC installer.iss      (ou abra no Inno Setup Compiler e F9)
 ;  Pré-requisito: rodar build.bat antes (gera dist\*.exe)
 ; ============================================================================
-#define NomeApp "Crônicas de Cinzas"
+#define NomeApp "A Última Vigília"
 #define VersaoApp "1.0.0"
-#define ExeGui "CronicasDeCinzas.exe"
-#define ExeCmd "CronicasDeCinzas-CMD.exe"
+#define ExeGui "UltimaVigilia.exe"
+#define ExeCmd "UltimaVigilia-CMD.exe"
 
 [Setup]
-AppId={{7ABB65CD-8299-462C-A55E-849856A8F1BC}
+AppId={{3E5C9A41-7B2D-4F86-9C1A-D84B6E02F7A5}
 AppName={#NomeApp}
 AppVersion={#VersaoApp}
-AppPublisher=Crônicas de Cinzas
-DefaultDirName={autopf}\CronicasDeCinzas
+AppPublisher=A Última Vigília
+DefaultDirName={autopf}\UltimaVigilia
 DefaultGroupName={#NomeApp}
 DisableProgramGroupPage=yes
 OutputDir=instalador
-OutputBaseFilename=CronicasDeCinzas-Instalador-{#VersaoApp}
+OutputBaseFilename=UltimaVigilia-Instalador-{#VersaoApp}
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -26,7 +26,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 UninstallDisplayIcon={app}\{#ExeGui}
-; Os saves ficam em %APPDATA%\CronicasDeCinzas e NÃO são tocados por atualização ou desinstalação.
+; Os saves ficam em %APPDATA%\UltimaVigilia e NÃO são tocados por atualização ou desinstalação.
 
 [Languages]
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"

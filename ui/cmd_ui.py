@@ -14,10 +14,10 @@ import time
 from core import criacao, dados as D, itens as I, persistencia as P
 from core.motor import Motor, retomar, FASES, xp_proximo_nivel, xp_proxima_maestria, OFFLINE_MAX_S
 from core.util import fmt_dec, fmt_duracao, fmt_num, fmt_relogio, limitar, romano
+from ui.saida_segura import ProtecaoDeSaida
 
 import random
 
-VELOCIDADES = [1, 2, 5, 10, 30, 100]
 AUTOSAVE_S = 30.0
 
 # ----------------------------------------------------------------- ANSI
@@ -106,7 +106,7 @@ def preparar_terminal():
         except Exception:
             os.system("")  # fallback clássico que ativa ANSI em versões recentes
         try:
-            os.system("title Crônicas de Cinzas")
+            os.system("title A Última Vigília")
         except Exception:
             pass
 
@@ -238,7 +238,6 @@ class Tela:
         self.m = motor
         self.e = Estilo(ascii_only)
         self.vista = "painel"
-        self.vel_i = 0
         self.pausado = False
         self.detalhes = False
         self.msg = ""
@@ -268,8 +267,7 @@ class Tela:
         m, p = self.m, self.m.p
         d = m.derivados()
         cl = D.CLASSES[p["classe"]]
-        vel = VELOCIDADES[self.vel_i]
-        estado = c("|| PAUSADO", "yellow") if self.pausado else c("> x%d" % vel, "green")
+        estado = c("|| PAUSADO", "yellow") if self.pausado else c("> Em curso", "green")
         t1 = "%s  %s, %s  Nível %d" % (c(p["nome"], "white"), D.ORIGENS[p["origem"]]["nome"], cl["nome"], p["nivel"])
         t2 = "%s   Tempo de jornada: %s   %s" % (c(m.nome_regiao(), "gold"), fmt_duracao(m.s["tempo_jogado"]), estado)
         rot, frac, det = m.info_fase()
@@ -283,10 +281,10 @@ class Tela:
             self._linha_barra("Atividade", frac, c(rot, "cyan"), "cyan", W),
             c(det, "dim"),
         ]
-        return self.e.caixa("CRÔNICAS DE CINZAS", linhas, W)
+        return self.e.caixa("A ÚLTIMA VIGÍLIA", linhas, W)
 
     def rodape(self, W):
-        itens = ("[P]ausa [V]elocidade [1]Painel [2]Atributos [3]Equip. [4]Maestrias [5]Jornada "
+        itens = ("[P]ausa [1]Painel [2]Atributos [3]Equip. [4]Maestrias [5]Jornada "
                  "[6]Crônica [D]etalhes [X]Exportar [Z]Reiniciar [Q]Sair")
         if self.confirmando == "reset":
             return [c("Reiniciar apaga esta jornada (uma cópia fica em 'exportacoes'). Digite S para confirmar:", "red")]
@@ -450,9 +448,6 @@ def tratar_tecla(tela, k, motor):
         tela.vista = mapa[k]
     elif k == "p":
         tela.pausado = not tela.pausado
-    elif k == "v":
-        tela.vel_i = (tela.vel_i + 1) % len(VELOCIDADES)
-        tela.aviso("Velocidade x%d" % VELOCIDADES[tela.vel_i])
     elif k == "d":
         tela.detalhes = not tela.detalhes
         tela.aviso("Detalhes de combate: %s" % ("ligados" if tela.detalhes else "desligados"))
@@ -469,6 +464,7 @@ def tratar_tecla(tela, k, motor):
 
 def laco_jogo(motor, ascii_only=False):
     tela = Tela(motor, ascii_only)
+    protecao = ProtecaoDeSaida(motor)   # salva sozinho se a janela do console for fechada
     sys.stdout.write("\x1b[?25l\x1b[2J")   # esconde cursor, limpa tela
     sys.stdout.flush()
     ult = time.monotonic()
@@ -476,8 +472,11 @@ def laco_jogo(motor, ascii_only=False):
     ult_draw = 0.0
     resultado = "sair"
     try:
-        with Teclado() as kb:
+        with protecao, Teclado() as kb:
             while True:
+                if protecao.encerrar.is_set():
+                    resultado = "sair"
+                    break
                 k = kb.ler()
                 if k:
                     acao = tratar_tecla(tela, k, motor)
@@ -489,7 +488,7 @@ def laco_jogo(motor, ascii_only=False):
                 dt = min(agora - ult, 120.0)
                 ult = agora
                 if not tela.pausado and tela.confirmando != "reset":
-                    motor.avancar(dt * VELOCIDADES[tela.vel_i])
+                    motor.avancar(dt)
                 if agora - ult_save >= AUTOSAVE_S:
                     P.salvar(motor.s)
                     ult_save = agora
@@ -500,9 +499,17 @@ def laco_jogo(motor, ascii_only=False):
                 time.sleep(0.05)
     except KeyboardInterrupt:
         resultado = "sair"
+    except OSError:
+        # o console deixou de existir (janela fechada): trata como pedido de encerramento
+        protecao.encerrar.set()
+        resultado = "sair"
     finally:
-        sys.stdout.write("\x1b[?25h" + RESET + "\x1b[2J\x1b[H")
-        sys.stdout.flush()
+        protecao.finalizar()   # primeiro o save: o console pode já estar sendo destruído
+        try:
+            sys.stdout.write("\x1b[?25h" + RESET + "\x1b[2J\x1b[H")
+            sys.stdout.flush()
+        except (OSError, ValueError):
+            pass
     return resultado
 
 
@@ -517,7 +524,7 @@ def mostrar_relatorio(linhas):
 
 def menu_inicial():
     """Retorna o Motor a ser jogado, ou None para sair."""
-    print(c("\n  CRÔNICAS DE CINZAS", "gold") + c("   v%s" % D.VERSAO, "dim"))
+    print(c("\n  A ÚLTIMA VIGÍLIA", "gold") + c("   v%s" % D.VERSAO, "dim"))
     print(c("  Uma jornada que continua mesmo quando você não está olhando.\n", "dim"))
     while True:
         tem = P.existe_save()

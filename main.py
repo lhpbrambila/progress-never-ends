@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Ponto de entrada único de Crônicas de Cinzas.
+"""Ponto de entrada único de A Última Vigília.
 
     python main.py            -> janela gráfica (ou terminal, se tkinter não existir)
     python main.py --cmd      -> interface de terminal
@@ -15,7 +15,7 @@ from core import dados as D
 
 
 def _analisar(argv):
-    ap = argparse.ArgumentParser(prog="CronicasDeCinzas", description=D.NOME_JOGO + " - RPG idle sombrio")
+    ap = argparse.ArgumentParser(prog="UltimaVigilia", description=D.NOME_JOGO + " - RPG idle sombrio")
     modo = ap.add_mutually_exclusive_group()
     modo.add_argument("--cmd", action="store_true", help="abre a interface de terminal")
     modo.add_argument("--gui", action="store_true", help="abre a interface gráfica")
@@ -35,7 +35,7 @@ def principal(argv=None, modo_padrao="gui"):
         print("%s %s" % (D.NOME_JOGO, D.VERSAO))
         return 0
     if args.dir:
-        os.environ["CRONICAS_DIR"] = args.dir
+        os.environ["VIGILIA_DIR"] = args.dir
     modo = "cmd" if args.cmd else "gui" if args.gui else modo_padrao
     if modo == "gui":
         try:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Motor de simulação idle de Crônicas de Cinzas.
+"""Motor de simulação idle de A Última Vigília.
 
 O estado inteiro vive em um dicionário serializável (``Motor.s``). A simulação avança por
 tempo (``avancar(dt)``), em passos curtos e fixos, de modo que o resultado independe da

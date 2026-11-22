@@ -7,7 +7,7 @@ import sys
 import time
 
 VERSAO_SAVE = 1
-NOME_PASTA = "CronicasDeCinzas"
+NOME_PASTA = "UltimaVigilia"
 
 
 class ErroSave(Exception):
@@ -16,14 +16,14 @@ class ErroSave(Exception):
 
 def diretorio_dados():
     """Pasta de dados do jogador. Fica fora da pasta de instalação para sobreviver a atualizações."""
-    forcado = os.environ.get("CRONICAS_DIR")
+    forcado = os.environ.get("VIGILIA_DIR")
     if forcado:
         base = forcado
     elif sys.platform.startswith("win"):
         base = os.path.join(os.environ.get("APPDATA") or os.path.expanduser("~"), NOME_PASTA)
     else:
         base = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"),
-                            "cronicas-de-cinzas")
+                            "ultima-vigilia")
     os.makedirs(base, exist_ok=True)
     return base
 
@@ -92,7 +92,7 @@ def exportar(estado):
     """Cria uma cópia datada em <dados>/exportacoes e retorna o caminho."""
     pasta = os.path.join(diretorio_dados(), "exportacoes")
     os.makedirs(pasta, exist_ok=True)
-    nome = "cronicas_%s.json" % time.strftime("%Y%m%d_%H%M%S")
+    nome = "vigilia_%s.json" % time.strftime("%Y%m%d_%H%M%S")
     caminho = os.path.join(pasta, nome)
     copia = dict(estado)
     copia["versao"] = VERSAO_SAVE

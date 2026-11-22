@@ -26,14 +26,14 @@ def novo_motor(classe="penitente", origem="marcas", semente=1):
 class BaseComPasta(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
-        self._antigo = os.environ.get("CRONICAS_DIR")
-        os.environ["CRONICAS_DIR"] = self._tmp.name
+        self._antigo = os.environ.get("VIGILIA_DIR")
+        os.environ["VIGILIA_DIR"] = self._tmp.name
 
     def tearDown(self):
         if self._antigo is None:
-            os.environ.pop("CRONICAS_DIR", None)
+            os.environ.pop("VIGILIA_DIR", None)
         else:
-            os.environ["CRONICAS_DIR"] = self._antigo
+            os.environ["VIGILIA_DIR"] = self._antigo
         self._tmp.cleanup()
 
 

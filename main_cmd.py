@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Entrada do executável de terminal (CronicasDeCinzas-CMD.exe, com console)."""
+"""Entrada do executável de terminal (UltimaVigilia-CMD.exe, com console)."""
 import sys
 
 from main import principal

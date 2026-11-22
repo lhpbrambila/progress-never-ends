@@ -5,7 +5,7 @@ Todo o conteúdo narrativo fica aqui, em português do Brasil, separado da lógi
 """
 
 VERSAO = "1.0.0"
-NOME_JOGO = "Crônicas de Cinzas"
+NOME_JOGO = "A Última Vigília"
 
 # ---------------------------------------------------------------- atributos
 ATRIBUTOS = ["forca", "destreza", "vitalidade", "intelecto", "vontade"]
