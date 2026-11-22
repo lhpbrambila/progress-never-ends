@@ -1,0 +1,3 @@
+# O jogo em si usa apenas a biblioteca padrão do Python (incluindo tkinter).
+# Dependência apenas para gerar os .exe:
+pyinstaller>=6.0
