@@ -4,7 +4,9 @@
 ;  Pré-requisito: rodar build.bat antes (gera dist\*.exe)
 ; ============================================================================
 #define NomeApp "A Última Vigília"
-#define VersaoApp "1.0.0"
+#ifndef VersaoApp
+  #define VersaoApp "1.1.0"
+#endif
 #define ExeGui "UltimaVigilia.exe"
 #define ExeCmd "UltimaVigilia-CMD.exe"
 

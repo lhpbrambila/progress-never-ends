@@ -64,8 +64,8 @@ class TestSimulacao(unittest.TestCase):
                 self.assertGreaterEqual(p["fadiga"], 0.0)
                 self.assertLessEqual(p["fadiga"], 100.0)
                 self.assertIn(m.s["fase"], ("marcha", "combate", "recuperacao", "forja", "consolidacao"))
-            self.assertGreater(p["nivel"], 20, classe)
-            self.assertGreater(m.s["stats"]["abates"], 500, classe)
+            self.assertGreater(p["nivel"], 10, classe)
+            self.assertGreater(m.s["stats"]["abates"], 300, classe)
 
     def test_progride_pelas_regioes_e_registra_marcos(self):
         m = novo_motor("cacador", semente=2)

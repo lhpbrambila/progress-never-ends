@@ -10,7 +10,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
-from core import criacao, dados as D, itens as I, persistencia as P
+from core import criacao, dados as D, itens as I, persistencia as P, talentos as T, dados_talentos as DT
 from core.motor import Motor, retomar, xp_proximo_nivel, xp_proxima_maestria
 from core.util import fmt_dec, fmt_duracao, fmt_num, fmt_relogio, limitar
 
@@ -24,6 +24,7 @@ OURO = "#b08d57"
 COR_CATEGORIA = {
     "info": DIM, "detalhe": "#5f574d", "combate": FG, "perigo": "#d9a441", "alerta": "#c75a4a",
     "marco": OURO, "item": "#6fb7c9", "forja": "#b57fcf", "nivel": "#7fbf7f", "relato": OURO,
+    "evento": "#6f9fe0", "talento": "#b57fcf",
 }
 COR_RARIDADE = [FG, "#7fbf7f", "#6f9fe0", "#b57fcf", "#e0a43c"]
 
@@ -95,36 +96,40 @@ class DialogoCriacao(tk.Toplevel):
                                       values=[D.CLASSES[k]["nome"] for k in self._classes])
         self.cb_classe.current(0)
         self.cb_classe.grid(row=3, column=1, columnspan=2, sticky="we", pady=2)
+        ttk.Label(self, text="Caminho").grid(row=4, column=0, sticky="w", pady=2)
+        self.cb_caminho = ttk.Combobox(self, state="readonly", width=30)
+        self.cb_caminho.grid(row=4, column=1, columnspan=2, sticky="we", pady=2)
+        self.cb_caminho.bind("<<ComboboxSelected>>", lambda e: self._atualizar_desc())
         self.lbl_desc = ttk.Label(self, style="Dim.TLabel", wraplength=420, justify="left")
-        self.lbl_desc.grid(row=4, column=0, columnspan=3, sticky="w", pady=(4, 8))
+        self.lbl_desc.grid(row=5, column=0, columnspan=3, sticky="w", pady=(4, 8))
         self.cb_origem.bind("<<ComboboxSelected>>", lambda e: self._atualizar_desc())
         self.cb_classe.bind("<<ComboboxSelected>>", lambda e: self._rolar_se_preciso())
 
         self.modo = tk.StringVar(value="rolar")
         ttk.Radiobutton(self, text="Rolagem (4d6, descarta o menor)", variable=self.modo, value="rolar",
-                        command=self._mudou_modo).grid(row=5, column=0, columnspan=2, sticky="w")
+                        command=self._mudou_modo).grid(row=6, column=0, columnspan=2, sticky="w")
         ttk.Radiobutton(self, text="Distribuir %d pontos" % criacao.PONTOS_DISTRIBUIVEIS, variable=self.modo,
-                        value="dist", command=self._mudou_modo).grid(row=5, column=2, sticky="w")
+                        value="dist", command=self._mudou_modo).grid(row=6, column=2, sticky="w")
 
         self.vars = {}
         self.spins = {}
         for i, a in enumerate(D.ATRIBUTOS):
-            ttk.Label(self, text=D.NOMES_ATRIBUTOS[a]).grid(row=6 + i, column=0, sticky="w", pady=1)
+            ttk.Label(self, text=D.NOMES_ATRIBUTOS[a]).grid(row=7 + i, column=0, sticky="w", pady=1)
             v = tk.IntVar(value=criacao.BASE_ATRIBUTO)
             sp = tk.Spinbox(self, from_=criacao.BASE_ATRIBUTO, to=criacao.MAX_ATRIBUTO_INICIAL, width=5,
                             textvariable=v, command=self._atualizar_restante, bg=BG2, fg=FG,
                             buttonbackground=BG2, relief="flat")
-            sp.grid(row=6 + i, column=1, sticky="w", pady=1)
+            sp.grid(row=7 + i, column=1, sticky="w", pady=1)
             sp.bind("<KeyRelease>", lambda e: self._atualizar_restante())
             self.vars[a] = v
             self.spins[a] = sp
             ttk.Label(self, text=D.DESC_ATRIBUTOS[a], style="Dim.TLabel", wraplength=300,
-                      justify="left").grid(row=6 + i, column=2, sticky="w", padx=(8, 0))
+                      justify="left").grid(row=7 + i, column=2, sticky="w", padx=(8, 0))
         self.lbl_info = ttk.Label(self, text="", style="Dim.TLabel")
-        self.lbl_info.grid(row=11, column=0, columnspan=3, sticky="w", pady=(6, 0))
+        self.lbl_info.grid(row=12, column=0, columnspan=3, sticky="w", pady=(6, 0))
 
         barra = ttk.Frame(self)
-        barra.grid(row=12, column=0, columnspan=3, sticky="we", pady=(12, 0))
+        barra.grid(row=13, column=0, columnspan=3, sticky="we", pady=(12, 0))
         ttk.Button(barra, text="Rolar novamente", command=self._rolar).pack(side="left")
         ttk.Button(barra, text="Criação rápida", command=self._rapida).pack(side="left", padx=6)
         ttk.Button(barra, text="Iniciar jornada", command=self._confirmar).pack(side="right")
@@ -142,10 +147,25 @@ class DialogoCriacao(tk.Toplevel):
     def _classe(self):
         return self._classes[self.cb_classe.current()]
 
+    def _caminhos(self):
+        return [k for k, _, _ in T.caminhos(self._classe())]
+
+    def _caminho(self):
+        i = self.cb_caminho.current()
+        c = self._caminhos()
+        return c[i] if 0 <= i < len(c) else c[0]
+
     def _atualizar_desc(self):
+        cls = self._classe()
+        if getattr(self, "_classe_cam", None) != cls:
+            self._classe_cam = cls
+            self.cb_caminho.config(values=[n for _, n, _ in T.caminhos(cls)])
+            self.cb_caminho.current(0)
         o, cl = D.ORIGENS[self._origem()], D.CLASSES[self._classe()]
         bonus = ", ".join("+%d %s" % (v, D.NOMES_ATRIBUTOS[k]) for k, v in o["bonus"].items())
-        self.lbl_desc.config(text="%s (%s)\n%s\nTécnica: %s" % (o["desc"], bonus, cl["desc"], cl["tecnica"]["nome"]))
+        cam = DT.TALENTOS[cls]["caminhos"][self._caminho()]
+        self.lbl_desc.config(text="%s (%s)\n%s\nTécnica: %s\n%s: %s" % (
+            o["desc"], bonus, cl["desc"], cl["tecnica"]["nome"], cam["nome"], cam["desc"]))
 
     def _mudou_modo(self):
         if self.modo.get() == "rolar":
@@ -186,7 +206,7 @@ class DialogoCriacao(tk.Toplevel):
 
     def _rapida(self):
         nome, origem, classe, attrs = criacao.criacao_rapida(self.rng)
-        self._finalizar(nome, origem, classe, attrs)
+        self._finalizar(nome, origem, classe, attrs, criacao.caminho_aleatorio(self.rng, classe))
 
     def _confirmar(self):
         nome = self.nome.get().strip()[:24]
@@ -202,11 +222,11 @@ class DialogoCriacao(tk.Toplevel):
             if not ok:
                 messagebox.showwarning("Atributos", msg, parent=self)
                 return
-        self._finalizar(nome, self._origem(), self._classe(), attrs)
+        self._finalizar(nome, self._origem(), self._classe(), attrs, self._caminho())
 
-    def _finalizar(self, nome, origem, classe, attrs):
+    def _finalizar(self, nome, origem, classe, attrs, caminho):
         final = criacao.aplicar_origem(attrs, origem)
-        self.resultado = Motor.novo(nome, origem, classe, final)
+        self.resultado = Motor.novo(nome, origem, classe, final, caminho=caminho)
         self.destroy()
 
 
@@ -297,7 +317,7 @@ class Aplicacao:
         self.nb.pack(fill="both", expand=True, padx=14, pady=8)
         self.abas = {}
         for chave, titulo in (("cronica", "Crônica"), ("atributos", "Atributos"), ("equip", "Equipamentos"),
-                              ("maestrias", "Maestrias"), ("jornada", "Jornada")):
+                              ("talentos", "Talentos"), ("maestrias", "Maestrias"), ("jornada", "Jornada")):
             fr = ttk.Frame(self.nb)
             t = _texto(fr)
             sb = ttk.Scrollbar(fr, command=t.yview)
@@ -306,14 +326,16 @@ class Aplicacao:
             t.pack(side="left", fill="both", expand=True)
             self.nb.add(fr, text=titulo)
             self.abas[chave] = t
-        self._chaves_abas = ["cronica", "atributos", "equip", "maestrias", "jornada"]
+        self._chaves_abas = ["cronica", "atributos", "equip", "talentos", "maestrias", "jornada"]
         for cat, cor in COR_CATEGORIA.items():
             self.abas["cronica"].tag_configure(cat, foreground=cor)
         self.abas["cronica"].tag_configure("hora", foreground="#5f574d")
-        for chave in ("atributos", "equip", "maestrias", "jornada"):
+        for chave in ("atributos", "equip", "talentos", "maestrias", "jornada"):
             t = self.abas[chave]
             t.tag_configure("ouro", foreground=OURO)
             t.tag_configure("dim", foreground=DIM)
+            t.tag_configure("azul", foreground="#6fb7c9")
+            t.tag_configure("unico", foreground="#e0a43c")
             for i, cor in enumerate(COR_RARIDADE):
                 t.tag_configure("rar%d" % i, foreground=cor)
         self.nb.bind("<<NotebookTabChanged>>", lambda e: self._forcar_aba())
@@ -482,7 +504,7 @@ class Aplicacao:
         for a in D.ATRIBUTOS:
             extra = d["atributos"][a] - p["atributos"][a]
             partes.append(("%-11s %3d" % (D.NOMES_ATRIBUTOS[a], p["atributos"][a]), None))
-            partes.append(("  (+%s equip.)" % fmt_num(extra) if extra > 0 else "", "rar2"))
+            partes.append(("  (+%s equip./talentos)" % fmt_num(extra) if extra > 0 else "", "rar2"))
             partes.append(("   %s\n" % D.DESC_ATRIBUTOS[a], "dim"))
         partes.append(("\nDerivados\n", "ouro"))
         tec = D.CLASSES[p["classe"]]["tecnica"]
@@ -491,7 +513,13 @@ class Aplicacao:
             "Dano por golpe       %s" % fmt_num(d["dano"]),
             "Defesa               %s" % fmt_num(d["defesa"]),
             "Precisão base        %d%%" % round(d["acerto"] * 100),
-            "Chance de crítico    %s%%" % fmt_dec(d["crit"] * 100),
+            "Chance de crítico    %s%% (dano crítico x%s)" % (fmt_dec(d["crit"] * 100), fmt_dec(d["crit_mult"], 2)),
+            "Esquiva              %s%%" % fmt_dec(d["esquiva"] * 100),
+            "Redução de dano      %s%%" % fmt_dec(d["reducao_dano"] * 100),
+            "Roubo de vida        %s%%" % fmt_dec(d["roubo_vida"] * 100),
+            "Resist. a veneno     %s%%" % fmt_dec(d["resist_veneno"] * 100),
+            "Dano contra guardiões +%s%%" % fmt_dec(d["dano_chefe_pct"] * 100),
+            "Experiência extra    +%s%% | Fragmentos extra +%s%%" % (fmt_dec(d["xp_pct"] * 100), fmt_dec(d["fragmentos_pct"] * 100)),
             "Intervalo do ciclo   %ss" % fmt_dec(d["ciclo"], 2),
             "Recuperação          %s%% da vitalidade por segundo" % fmt_dec(d["regen"] * 100),
             "Resistência à fadiga x%s" % fmt_dec(d["resist"], 2),
@@ -504,6 +532,7 @@ class Aplicacao:
 
     def _aba_equip(self):
         p = self.motor.p
+        forja = self.motor.derivados()["forja"]
         partes = [("Equipamentos\n\n", "ouro")]
         for slot in D.SLOTS:
             it = p["equip"].get(slot)
@@ -511,20 +540,48 @@ class Aplicacao:
             if not it:
                 partes.append(("(vazio)\n", "dim"))
                 continue
-            partes.append((I.rotulo(it), "rar%d" % it["raridade"]))
-            partes.append(("  [%s, nível %d]\n" % (D.RARIDADES[it["raridade"]], it["ilvl"]), "dim"))
-            rot = {"arma": "Dano", "armadura": "Defesa", "reliquia": "Vigor"}[slot]
-            efeitos = ["%s +%s" % (rot, fmt_num(I.poder(it) * (2.5 if slot == "reliquia" else 1)))]
+            partes.append((I.rotulo(it), "unico" if it.get("unico") else "rar%d" % it["raridade"]))
+            partes.append(("  [%s, nível %d]\n" % (I.rotulo_raridade(it), it["ilvl"]), "dim"))
+            rot, val = I.poder_exibido(it)
+            efeitos = ["%s +%s" % (rot, fmt_num(val))]
             efeitos += ["%s +%s" % (D.NOMES_ATRIBUTOS[a], fmt_num(v)) for a, v in I.afixos(it).items()]
             partes.append(("          " + " | ".join(efeitos) + "\n", None))
+            for ln in I.linhas_mods(it):
+                partes.append(("          " + ln + "\n", "azul"))
+            lore = I.lore_item(it)
+            if lore:
+                partes.append(("          " + lore + "\n", "dim"))
             if it["refino"] < D.REFINO_MAX:
                 partes.append(("          Refino +%d: próximo custa %d fragmentos (%d%% de êxito)\n\n" % (
-                    it["refino"], I.custo_refino(it),
-                    round(I.chance_refino(it, self.motor.derivados()["forja"]) * 100)), "dim"))
+                    it["refino"], I.custo_refino(it), round(I.chance_refino(it, forja) * 100)), "dim"))
             else:
                 partes.append(("          Refino no máximo (+%d)\n\n" % D.REFINO_MAX, "dim"))
+        conj = I.resumo_conjuntos(p["equip"])
+        if conj:
+            partes.append(("Conjuntos\n", "ouro"))
+            for cj in conj:
+                partes.append(("%s (%d/%d peças)\n" % (cj["nome"], cj["n"], cj["total"]), None))
+                for pecas, bonus, ativo in cj["bonus"]:
+                    partes.append(("   %s %d peças: %s\n" % ("[x]" if ativo else "[ ]", pecas, I.descrever_efeitos(bonus)),
+                                   "rar1" if ativo else "dim"))
+            partes.append(("\n", None))
         partes.append(("Fragmentos disponíveis: %d\n" % p["fragmentos"], "ouro"))
         self._preencher("equip", partes)
+
+    def _aba_talentos(self):
+        p = self.motor.p
+        cl = p["classe"]
+        cam = DT.TALENTOS[cl]["caminhos"][T.caminho_valido(cl, p["caminho"])]
+        partes = [("%s - %s\n" % (D.CLASSES[cl]["nome"], cam["nome"]), "ouro"),
+                  (cam["desc"] + "\n", "dim"),
+                  ("Talentos obtidos: %d (um a cada 5 níveis e a cada guardião inédito do ciclo)\n\n" % T.total(p["talentos"]), None)]
+        for tid, defn in DT.TALENTOS[cl]["talentos"].items():
+            r = p["talentos"].get(tid, 0)
+            partes.append(("%-24s grau %d/%d\n" % (defn["nome"], r, T.RANK_MAX), "rar3" if r else "dim"))
+            partes.append(("   %s\n" % defn["desc"], "dim"))
+            if r:
+                partes.append(("   Atual: %s\n" % I.descrever_efeitos({k: v * r for k, v in defn["efeito"].items()}), "azul"))
+        self._preencher("talentos", partes)
 
     def _aba_maestrias(self):
         p = self.motor.p
@@ -535,7 +592,7 @@ class Aplicacao:
                 pct = int(100 * mm["xp"] / xp_proxima_maestria(mm["nivel"]))
             else:
                 pct = 100
-            partes.append(("%-26s Nv %2d  (%d%%)\n" % (defn["nome"], mm["nivel"], pct), None))
+            partes.append(("%-26s Nv %3d  (%d%%)\n" % (defn["nome"], mm["nivel"], pct), None))
             partes.append(("   %s\n" % defn["desc"], "dim"))
         self._preencher("maestrias", partes)
 
@@ -552,11 +609,13 @@ class Aplicacao:
             partes.append(("%s %-32s níveis %d-%d\n" % (marca, reg["nome"], reg["nivel_base"], reg["nivel_chefe"]), tag))
         st = s["stats"]
         partes.append(("\nEstatísticas\n", "ouro"))
-        partes.append(("Abates: %d (guardiões: %d)\nLéguas percorridas: %d\nRecuos: %d\n"
-                       "Itens obtidos: %d | desmontados: %d\nRefinos: %d bem-sucedidos, %d falhos\n"
+        partes.append(("Ciclo %d | Abates: %d (elites: %d, guardiões: %d)\nLéguas percorridas: %d\nRecuos: %d\n"
+                       "Itens obtidos: %d (únicos: %d) | desmontados: %d\nRefinos: %d bem-sucedidos, %d falhos\n"
+                       "Eventos de jornada: %d superados, %d fracassados\n"
                        "Dano causado: %s | sofrido: %s | maior golpe: %s | críticos: %d\n" % (
-                           st["abates"], st["chefes"], int(st["leguas"]), st["recuos"], st["itens"], st["desmontados"],
-                           st["refinos_ok"], st["refinos_falha"], fmt_num(st["dano_causado"]),
+                           s["ciclo"] + 1, st["abates"], st["elites"], st["chefes"], int(st["leguas"]), st["recuos"],
+                           st["itens"], st["unicos"], st["desmontados"], st["refinos_ok"], st["refinos_falha"],
+                           st["eventos_ok"], st["eventos_falha"], fmt_num(st["dano_causado"]),
                            fmt_num(st["dano_sofrido"]), fmt_num(st["maior_golpe"]), st["criticos"]), None))
         partes.append(("\nMarcos alcançados (%d)\n" % len(s["marcos"]), "ouro"))
         for mc in s["marcos"]:

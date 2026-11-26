@@ -2,7 +2,7 @@
 rem ============================================================================
 rem  A Ultima Vigilia - build completo no Windows
 rem  Gera: dist\UltimaVigilia.exe (janela), dist\UltimaVigilia-CMD.exe (terminal)
-rem        e, se o Inno Setup 6 estiver instalado, instalador\UltimaVigilia-Instalador-1.0.0.exe
+rem        e, se o Inno Setup 6 estiver instalado, instalador\UltimaVigilia-Instalador-<versao>.exe
 rem  Uso:  build.bat           (testa, compila e gera o instalador)
 rem        build.bat semtestes (pula os testes)
 rem ============================================================================
@@ -54,11 +54,12 @@ if not defined ISCC (
   echo         Os executaveis ja estao prontos em dist\ . Depois rode:  ISCC installer.iss
   exit /b 0
 )
-"%ISCC%" installer.iss || exit /b 1
+for /f %%v in ('python -c "from core.dados import VERSAO; print(VERSAO)"') do set "VERSAO=%%v"
+"%ISCC%" /DVersaoApp=%VERSAO% installer.iss || exit /b 1
 
 echo.
 echo Pronto:
 echo   dist\UltimaVigilia.exe
 echo   dist\UltimaVigilia-CMD.exe
-echo   instalador\UltimaVigilia-Instalador-1.0.0.exe
+echo   instalador\UltimaVigilia-Instalador-%VERSAO%.exe
 exit /b 0

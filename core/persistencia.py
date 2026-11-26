@@ -6,7 +6,8 @@ import shutil
 import sys
 import time
 
-VERSAO_SAVE = 1
+VERSAO_SAVE = 2
+VERSOES_ACEITAS = (1, 2)   # saves v1 são completados pelo Motor ao carregar
 NOME_PASTA = "UltimaVigilia"
 
 
@@ -43,7 +44,7 @@ def existe_save():
 def _validar(dados):
     if not isinstance(dados, dict):
         raise ErroSave("Formato de save inválido.")
-    if dados.get("versao") != VERSAO_SAVE:
+    if dados.get("versao") not in VERSOES_ACEITAS:
         raise ErroSave("Versão de save não suportada: %r." % dados.get("versao"))
     for chave in ("personagem", "regiao", "fase", "tempo_jogado"):
         if chave not in dados:

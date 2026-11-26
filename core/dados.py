@@ -4,7 +4,7 @@
 Todo o conteúdo narrativo fica aqui, em português do Brasil, separado da lógica.
 """
 
-VERSAO = "1.0.0"
+VERSAO = "1.1.0"
 NOME_JOGO = "A Última Vigília"
 
 # ---------------------------------------------------------------- atributos
@@ -96,9 +96,81 @@ CLASSES = {
     },
 }
 
+ORIGENS.update({
+    "estepes": {
+        "nome": "Nômade das Estepes Frias",
+        "desc": "Povo errante que atravessa planícies onde nada cresce, carregando tudo o que possui.",
+        "bonus": {"forca": 2, "destreza": 1},
+    },
+    "mares": {
+        "nome": "Filho do Mar Cinzento",
+        "desc": "Gente de portos mortos, que aprendeu a ler o humor das marés e dos homens.",
+        "bonus": {"destreza": 2, "vitalidade": 1},
+    },
+    "corte": {
+        "nome": "Exilado da Corte Caída",
+        "desc": "Antigo cortesão de um reino extinto, ainda educado e ainda perigoso.",
+        "bonus": {"intelecto": 2, "forca": 1},
+    },
+    "claustro": {
+        "nome": "Órfão do Claustro Mudo",
+        "desc": "Criado entre monges que fizeram voto de silêncio, e dele herdou a paciência.",
+        "bonus": {"vontade": 2, "destreza": 1},
+    },
+})
+
+CLASSES.update({
+    "lanceiro": {
+        "nome": "Lanceiro da Vanguarda",
+        "desc": "Soldado de linha que segurou a última muralha e ainda a segura em sonhos.",
+        "principal": "forca",
+        "pesos": {"forca": 3.5, "destreza": 2.5, "vitalidade": 2.5, "vontade": 1, "intelecto": 0.5},
+        "tecnica": {
+            "nome": "Investida do Último Reduto", "mult": 1.8, "cd": 3, "cura": 0.0,
+            "texto": "Você avança em {tecnica}: a lança atravessa a guarda de {inimigo} ({dano}).",
+        },
+        "arma": ("Lança de Guarnição Gasta", "f"),
+    },
+    "alquimista": {
+        "nome": "Alquimista de Cinzas",
+        "desc": "Estudioso proscrito, que destila o que a guerra deixou nos campos.",
+        "principal": "intelecto",
+        "pesos": {"intelecto": 3.5, "destreza": 2, "vitalidade": 2, "vontade": 1.5, "forca": 0.5},
+        "tecnica": {
+            "nome": "Frasco de Vitríolo", "mult": 1.6, "cd": 4, "cura": 0.0,
+            "dot": {"frac": 0.7, "dur": 6.0},
+            "texto": "Você arremessa {tecnica}: o vitríolo corrói {inimigo} ({dano}) e continua queimando.",
+        },
+        "arma": ("Bastão de Vidro Rachado", "m"),
+    },
+    "ceifeiro": {
+        "nome": "Ceifeiro Errante",
+        "desc": "Colhe as vidas que a Roda deixa para trás, sem pressa e sem ódio.",
+        "principal": "forca",
+        "pesos": {"forca": 3, "destreza": 3, "vontade": 1.5, "vitalidade": 1.5, "intelecto": 1},
+        "tecnica": {
+            "nome": "Colheita", "mult": 2.2, "cd": 6, "cura": 0.04,
+            "texto": "A foice descreve um arco amplo em {tecnica}; {inimigo} cede ({dano}) e a vida colhida lhe volta aos poucos.",
+        },
+        "arma": ("Foice de Ceifa Gasta", "f"),
+    },
+    "monge": {
+        "nome": "Monge do Claustro Mudo",
+        "desc": "Fez voto de silêncio e disciplina; luta com as mãos nuas e a respiração contada.",
+        "principal": "destreza",
+        "pesos": {"destreza": 3.5, "vontade": 3, "vitalidade": 2, "forca": 1.5, "intelecto": 0},
+        "tecnica": {
+            "nome": "Palma do Silêncio", "mult": 2.0, "cd": 4, "cura": 0.02,
+            "texto": "Sem uma palavra, {tecnica} atinge {inimigo} no centro do peito ({dano}).",
+        },
+        "arma": ("Bandagens de Ferro Gastas", "f"),
+    },
+})
+
 NOMES_SUGERIDOS = [
     "Aldric", "Maren", "Sevrin", "Isolde", "Corvane", "Brenna", "Torvin", "Elysa",
     "Hadrian", "Nyra", "Osric", "Vesna", "Garrick", "Liora", "Dunmar", "Selene",
+    "Thessaly", "Roderic", "Ysolde", "Kaelen", "Morwen", "Edric", "Lysa", "Bram",
 ]
 
 # ---------------------------------------------------------------- maestrias
@@ -119,13 +191,14 @@ MAESTRIAS = {
     "tecnica": {"nome": "Domínio da Técnica", "efeito": "tecnica_pct", "por_nivel": 0.03,
                 "desc": "Fortalece a técnica característica da vocação."},
 }
-NIVEL_MAX_MAESTRIA = 60
+NIVEL_MAX_MAESTRIA = 100
 
 # ---------------------------------------------------------------- equipamentos
-SLOTS = ["arma", "armadura", "reliquia"]
-NOMES_SLOTS = {"arma": "Arma", "armadura": "Armadura", "reliquia": "Relíquia"}
+SLOTS = ["arma", "armadura", "elmo", "botas", "anel", "reliquia"]
+NOMES_SLOTS = {"arma": "Arma", "armadura": "Armadura", "elmo": "Elmo", "botas": "Botas",
+               "anel": "Anel", "reliquia": "Relíquia"}
 RARIDADES = ["Comum", "Incomum", "Raro", "Épico", "Lendário"]
-REFINO_MAX = 12
+REFINO_MAX = 30
 
 BASES_ITEM = {
     "arma": [("Espada Larga", "f"), ("Machado de Guerra", "m"), ("Maça Cravejada", "f"),
@@ -133,8 +206,14 @@ BASES_ITEM = {
              ("Arco Longo", "m"), ("Foice de Ceifa", "f")],
     "armadura": [("Cota de Malha", "f"), ("Couraça de Ferro", "f"), ("Gibão de Couro Curtido", "m"),
                  ("Manto Forrado", "m"), ("Brigantina", "f"), ("Armadura de Placas", "f")],
-    "reliquia": [("Medalhão", "m"), ("Amuleto", "m"), ("Anel de Sinete", "m"),
-                 ("Talismã", "m"), ("Relicário", "m"), ("Pingente de Osso", "m")],
+    "elmo": [("Elmo de Ferro", "m"), ("Capuz de Couro", "m"), ("Coifa de Malha", "f"),
+             ("Máscara Funerária", "f"), ("Barbuta", "f"), ("Elmo de Guerra", "m")],
+    "botas": [("Bota de Marcha", "f"), ("Greva de Ferro", "f"), ("Calçado de Peregrino", "m"),
+              ("Bota de Cano Alto", "f"), ("Sandália de Tiras", "f"), ("Bota Ferrada", "f")],
+    "anel": [("Anel de Sinete", "m"), ("Aliança Partida", "f"), ("Anel de Osso", "m"),
+             ("Selo Funerário", "m"), ("Anel de Ferro Frio", "m"), ("Aro de Prata Negra", "m")],
+    "reliquia": [("Medalhão", "m"), ("Amuleto", "m"), ("Talismã", "m"),
+                 ("Relicário", "m"), ("Pingente de Osso", "m"), ("Escapulário", "m")],
 }
 ADJETIVOS = [
     [("Gasto", "Gasta"), ("Rústico", "Rústica"), ("Desgastado", "Desgastada")],
@@ -360,3 +439,17 @@ MARCOS_NIVEL = {
     75: "Marco: nível 75. Lendas antigas parecem escritas sobre alguém como você.",
     100: "Marco: nível 100. O mundo inteiro conhece o peso dos seus passos.",
 }
+
+
+TEXTOS.update({
+    "talento": "Talento: {nome} (grau {n}). {desc}",
+    "talento_max": "Todos os talentos do seu caminho estão no auge. Algo mais profundo se fortalece (+2 {attr}).",
+    "elite": "Marco: primeiro inimigo marcado por uma característica sombria. Nem todo perigo é igual.",
+    "conjunto": "Conjunto {nome} ({n} peças): {efeitos}.",
+    "unico": "Marco: entre os despojos de {inimigo}, você encontra {item}. {lore}",
+    "unico_extra": "Os despojos de {inimigo} trazem outra peça: {item}.",
+    "veneno_fim": "O veneno em suas veias perde a força.",
+    "fase_chefe": "{texto}",
+    "evento_ok": "{texto}",
+    "evento_falha": "{texto}",
+})

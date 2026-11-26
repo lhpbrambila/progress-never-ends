@@ -3,6 +3,7 @@
 import random
 
 from . import dados as D
+from . import talentos as T
 
 BASE_ATRIBUTO = 8
 PONTOS_DISTRIBUIVEIS = 20
@@ -53,3 +54,7 @@ def criacao_rapida(rng=None, nome=None, origem=None, classe=None):
     nome = nome or rng.choice(D.NOMES_SUGERIDOS)
     attrs = rolar_atributos(rng, classe)
     return nome, origem, classe, attrs
+
+
+def caminho_aleatorio(rng, classe):
+    return rng.choice([k for k, _, _ in T.caminhos(classe)])
